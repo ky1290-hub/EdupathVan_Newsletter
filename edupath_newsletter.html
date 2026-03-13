@@ -988,6 +988,26 @@ EduPath는 데이터 기반 맞춤 전략으로 밴쿠버에서 가장 많은 �
 
 <script>
 
+// ── NAVIGATE (must be defined first for onload) ─────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const navMap = { dashboard:'대시보드', generate:'AI 뉴스레터 생성', approve:'승인 · 발송', history:'발송 이력', settings:'설정' };
+  document.getElementById('topbar-title').textContent = navMap[page] || page;
+  document.querySelectorAll('.nav-item')[['dashboard','generate','approve','history','settings'].indexOf(page)]?.classList.add('active');
+  document.getElementById('page-' + page).classList.add('active');
+  if(page === 'approve') {
+    if(typeof draftData !== 'undefined' && draftData) {
+      document.getElementById('no-draft-msg').style.display = 'none';
+      document.getElementById('approve-content').style.display = 'block';
+      renderApproveDraft();
+    } else {
+      document.getElementById('no-draft-msg').style.display = 'block';
+      document.getElementById('approve-content').style.display = 'none';
+    }
+  }
+}
+
 const TODAY = new Date('2026-03-12');
 document.getElementById('today-date').textContent = '2026년 3월 12일 (목)';
 
@@ -1093,26 +1113,6 @@ document.querySelectorAll('.topic-item').forEach(item => {
     this.classList.toggle('selected', this.querySelector('input').checked);
   });
 });
-
-// ── NAVIGATE ──────────────────────────────────────────────────────────────────
-function navigate(page) {
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const navMap = { dashboard:'대시보드', generate:'AI 뉴스레터 생성', approve:'승인 · 발송', history:'발송 이력', settings:'설정' };
-  document.getElementById('topbar-title').textContent = navMap[page] || page;
-  document.querySelectorAll('.nav-item')[['dashboard','generate','approve','history','settings'].indexOf(page)]?.classList.add('active');
-  document.getElementById('page-' + page).classList.add('active');
-  if(page === 'approve') {
-    if(draftData) {
-      document.getElementById('no-draft-msg').style.display = 'none';
-      document.getElementById('approve-content').style.display = 'block';
-      renderApproveDraft();
-    } else {
-      document.getElementById('no-draft-msg').style.display = 'block';
-      document.getElementById('approve-content').style.display = 'none';
-    }
-  }
-}
 
 // ── GENERATE ──────────────────────────────────────────────────────────────────
 async function generateNewsletter() {

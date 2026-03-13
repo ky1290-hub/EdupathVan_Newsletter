@@ -1550,16 +1550,20 @@ async function sendNewsletter() {
   for(var i=0; i<recipients.length; i+=50) {
     var batch = recipients.slice(i, i+50);
     try {
-      var res = await fetch('https://api.resend.com/emails/batch', {
+      var res = await fetch(SHEETS_API, {
         method: 'POST',
-        headers: {'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-        body: JSON.stringify(batch.map(function(to) {
-          return {from:from, to:[to], subject:subject,
-            html:'<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"></head><body>'+emailHtml+'</body></html>'};
-        }))
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'send',
+          apiKey: apiKey,
+          from: from,
+          recipients: batch,
+          subject: subject,
+          html: '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"></head><body>'+emailHtml+'</body></html>'
+        })
       });
-      if(res.ok) success += batch.length;
-      else { var d = await res.json(); console.error(d); fail += batch.length; }
+      if(res.ok) { var d = await res.json(); if(d.success) success += batch.length; else fail += batch.length; }
+      else fail += batch.length;
     } catch(e) { fail += batch.length; }
   }
 
@@ -1572,6 +1576,7 @@ async function sendNewsletter() {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
+          action: 'save',
           date: today,
           subject: subject,
           headline1: headlines[0]||'',

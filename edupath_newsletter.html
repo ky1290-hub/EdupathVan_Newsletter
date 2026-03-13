@@ -428,7 +428,7 @@
   }
 </style>
 </head>
-<body onload="navigate('dashboard')">
+<body>
 
 <div class="app">
   <!-- SIDEBAR -->
@@ -1665,4 +1665,15 @@ function saveSubscriberCount() {
     if(rkEl) rkEl.value = rk;
     if(rfEl && rf) rfEl.value = rf;
     if(rk && rb) { rb.textContent='연결됨'; rb.className='badge badge-ready'; rb.style.display='inline-flex'; }
-    if(sc && scEl) scEl.valu
+    if(sc && scEl) scEl.value = sc;
+    if(sc && subEl) subEl.textContent = parseInt(sc).toLocaleString();
+  }, 100);
+})();
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+navigate('dashboard');
+loadAdsData();
+
+</script>
+</body>
+</html>

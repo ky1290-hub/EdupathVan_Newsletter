@@ -5,47 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EduPath 뉴스레터 본부</title>
     <style>
-        :root {
-            --bg: #f5f4f0; --surface: #ffffff; --border: #e2e0d8;
-            --text: #1a1916; --accent: #1a3a5c; --accent2: #2563a8; --green: #1a6b3c;
-        }
+        :root { --bg: #f5f4f0; --surface: #ffffff; --accent: #1a3a5c; --accent2: #2563a8; --border: #e2e0d8; --green: #1a6b3c; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; line-height: 1.6; }
-
-        /* [레이아웃] PC 사이드바 / 모바일 하단바 */
-        .sidebar { width: 240px; background: var(--accent); color: white; padding: 25px; position: fixed; height: 100vh; z-index: 100; }
-        .main { margin-left: 240px; padding: 25px; min-height: 100vh; padding-bottom: 100px; }
-        .mobile-nav { display: none; position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid var(--border); z-index: 1000; grid-template-columns: repeat(4, 1fr); padding-bottom: env(safe-area-inset-bottom); }
-        .mobile-nav-item { padding: 12px 5px; text-align: center; font-size: 11px; cursor: pointer; color: #666; font-weight: 600; }
-
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .main { margin-left: 0; padding: 15px; }
-            .mobile-nav { display: grid; }
-        }
-
-        /* [카드 및 버튼] */
-        .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-bottom: 10px; transition: 0.2s; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; }
+        .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 10px; }
         .btn-primary { background: var(--accent2); color: white; }
         .btn-green { background: var(--green); color: white; }
-        
-        .topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .topic-item { border: 1px solid var(--border); padding: 12px; border-radius: 8px; font-size: 13px; text-align: center; cursor: pointer; background: #fafafa; }
-        .topic-item.selected { border-color: var(--accent2); background: #f0f6ff; color: var(--accent2); font-weight: 700; }
-        
         input, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px; font-size: 15px; background: #fafafa; }
+        .mobile-nav { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .mobile-nav-item { padding: 12px 5px; text-align: center; font-size: 11px; color: #666; font-weight: 600; }
+        #today-date { font-size: 12px; color: #888; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar">
-        <h2 style="margin-bottom:40px; letter-spacing:-1px;">EduPath</h2>
-        <div onclick="navigate('dashboard')" style="cursor:pointer; padding:12px 0; opacity:0.8">📊 대시보드</div>
-        <div onclick="navigate('generate')" style="cursor:pointer; padding:12px 0; opacity:0.8">✨ 뉴스레터 생성</div>
-        <div onclick="navigate('approve')" style="cursor:pointer; padding:12px 0; opacity:0.8">🚀 승인 및 발송</div>
-        <div onclick="navigate('settings')" style="cursor:pointer; padding:12px 0; opacity:0.8">⚙️ 설정</div>
-    </aside>
+    <div id="page-dashboard" class="page">
+        <div class="card">
+            <h3 style="margin:0; color:#888; font-size:14px;">실시간 구독자</h3>
+            <div style="font-size: 42px; font-weight: 800; color: var(--accent);">1,284 명</div>
+            <div id="today-date"></div>
+        </div>
+    </div>
+
+    <div id="page-generate" class="page" style="display:none">
+        <div class="card">
+            <h3>🔑 Claude API 키</h3>
+            <input type="password" id="claudeKey" placeholder="sk-ant-..." onchange="saveKey('claude', this.value)">
+            <p style="font-size:11px; color:red;">* 키를 입력하고 '완료' 혹은 다른 곳을 클릭해야 저장됩니다.</p>
+        </div>
+        <div class="card">
+            <h3>📝 뉴스레터 생성</h3>
+            <textarea id="ad-message" rows="3">밴쿠버 교육의 기준, EduPath.</textarea>
+            <button class="btn btn-primary" onclick="generateAI()">✨ AI 뉴스레터 생성</button>
+        </div>
+        <div id="draft-area" class="card" style="display:none">
+            <div id="draft-content" style="font-size:14px; background:#f9f9f9; padding:10px; border-radius:8px;"></div>
+            <button class="btn btn-green" onclick="navigate('approve')">확인 완료! 발송하러 가기</button>
+        </div>
+    </div>
+
+    <div id="page-approve" class="page" style="display:none">
+        <div class="card">
+            <h3>🚀 일괄 발송</h3>
+            <p>1,284명에게 뉴스레터를 전송합니다.</p>
+            <div id="status-msg" style="margin-bottom:10px; color:blue; font-weight:bold;"></div>
+            <button id="send-btn" class="btn btn-green" onclick="sendNewsletter()">🚀 지금 즉시 일괄 발송</button>
+        </div>
+    </div>
+
+    <div id="page-settings" class="page" style="display:none">
+        <div class="card">
+            <h3>⚙️ Resend 설정</h3>
+            <input type="password" id="resendKey" placeholder="re_..." onchange="saveKey('resend', this.value)">
+            <button class="btn btn-primary" onclick="alert('저장되었습니다!')">저장</button>
+        </div>
+    </div>
 
     <nav class="mobile-nav">
         <div class="mobile-nav-item" onclick="navigate('dashboard')">📊<br>현황</div>
@@ -54,91 +69,68 @@
         <div class="mobile-nav-item" onclick="navigate('settings')">⚙️<br>설정</div>
     </nav>
 
-    <main class="main">
-        <div id="page-dashboard" class="page">
-            <div class="card">
-                <h3 style="margin-top:0; font-size:16px; color:#888;">실시간 구독자</h3>
-                <div style="font-size: 48px; font-weight: 800; color: var(--accent); margin: 10px 0;">1,284 <span style="font-size:18px; font-weight:400; color:#aaa">명</span></div>
-                <div style="background:#f0f7ff; color:var(--accent2); padding:10px; border-radius:8px; font-size:13px; font-weight:600;">✅ 뉴스레터 발송 준비 완료</div>
-            </div>
-        </div>
-
-        <div id="page-generate" class="page" style="display:none">
-            <div class="card">
-                <h3>🔑 Claude API 키</h3>
-                <input type="password" id="claudeKey" placeholder="sk-ant-..." oninput="saveKey('claude', this.value)">
-                <p style="font-size:11px; color:#999; margin-top:8px;">* 입력 시 아이폰에 즉시 저장됩니다.</p>
-            </div>
-            <div class="card">
-                <h3>🎯 뉴스 주제 (중복 선택)</h3>
-                <div class="topic-grid">
-                    <div class="topic-item" onclick="toggleTopic(this)">🎓 입시 뉴스</div>
-                    <div class="topic-item" onclick="toggleTopic(this)">🏫 사립학교</div>
-                    <div class="topic-item" onclick="toggleTopic(this)">🏛️ 명문대 탐방</div>
-                    <div class="topic-item" onclick="toggleTopic(this)">🌆 로컬 정보</div>
-                </div>
-                <label style="font-size:12px; font-weight:600;">광고 메시지</label>
-                <textarea id="ad-message" rows="3">밴쿠버 교육의 기준, EduPath와 상담하세요.</textarea>
-                <button class="btn btn-primary" style="margin-top:20px" onclick="generateAI()">✨ AI 뉴스레터 생성 시작</button>
-            </div>
-            <div id="draft-area" class="card" style="display:none; border:2px solid var(--accent2);">
-                <h3 style="color:var(--accent2)">📝 생성된 초안</h3>
-                <div id="draft-content" style="background:#f9f9f9; padding:15px; border-radius:10px; font-size:14px; max-height:300px; overflow-y:auto;"></div>
-                <button class="btn btn-green" style="margin-top:15px" onclick="navigate('approve')">확인 완료! 발송하러 가기</button>
-            </div>
-        </div>
-
-        <div id="page-approve" class="page" style="display:none">
-            <div class="card">
-                <h3>🚀 최종 발송 확인</h3>
-                <p style="color:#666">총 1,284명의 학부모님께 뉴스레터를 전송합니다.</p>
-                <div style="padding:15px; background:#fff9e6; border-radius:8px; font-size:13px; color:#92580a; margin-bottom:20px;">⚠️ 발송 후에는 취소가 불가능하니 신중히 결정해주세요.</div>
-                <button class="btn btn-green" onclick="alert('발송 프로세스를 시작합니다!')">🚀 지금 즉시 일괄 발송</button>
-            </div>
-        </div>
-
-        <div id="page-settings" class="page" style="display:none">
-            <div class="card">
-                <h3>⚙️ 발송 엔진 설정 (Resend)</h3>
-                <label style="font-size:12px;">Resend API Key</label>
-                <input type="password" id="resendKey" placeholder="re_..." oninput="saveKey('resend', this.value)">
-                <button class="btn btn-primary" style="margin-top:15px" onclick="alert('저장되었습니다!')">💾 저장하기</button>
-            </div>
-        </div>
-    </main>
-
     <script>
+        // 원장님의 구글 시트 주소 (그대로 유지)
+        const SHEETS_API = 'https://script.google.com/macros/s/AKfycbwZ9AUZKUDM17RqXm05sZZpIJIXFOmXH01QrQxQ_4EEDYNEOo7kRO5I6NMcZih2yFs/exec';
+
         function navigate(pageId) {
             document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            const target = document.getElementById('page-' + pageId);
-            if(target) target.style.display = 'block';
-            window.scrollTo(0,0);
-        }
-
-        function toggleTopic(el) {
-            el.classList.toggle('selected');
+            document.getElementById('page-' + pageId).style.display = 'block';
         }
 
         function saveKey(type, val) {
             localStorage.setItem(type + '_api_key', val);
+            console.log(type + " 키 저장됨");
         }
 
         window.onload = function() {
+            document.getElementById('today-date').innerText = new Date().toLocaleDateString();
+            // 저장된 키 불러오기
             const cKey = localStorage.getItem('claude_api_key');
             const rKey = localStorage.getItem('resend_api_key');
             if (cKey) document.getElementById('claudeKey').value = cKey;
             if (rKey) document.getElementById('resendKey').value = rKey;
-            navigate('dashboard');
         };
 
         async function generateAI() {
-            const key = document.getElementById('claudeKey').value;
-            if(!key) return alert("API 키를 입력해주세요!");
-            alert("AI가 밴쿠버 최신 소식을 분석하여 글을 쓰는 중입니다... (약 20초 소요)");
-            setTimeout(() => {
-                document.getElementById('draft-area').style.display = 'block';
-                document.getElementById('draft-content').innerHTML = "<b>[EduPath 뉴스레터]</b><br>이번 주 주요 소식: 밴쿠버 입시 일정 변경 안내 및 로컬 커뮤니티 행사 소식입니다...";
-            }, 2000);
+            document.getElementById('draft-area').style.display = 'block';
+            document.getElementById('draft-content').innerHTML = "<b>[테스트 모드]</b> AI가 글을 작성했습니다. 발송 탭으로 이동하세요.";
+        }
+
+        async function sendNewsletter() {
+            const rKey = localStorage.getItem('resend_api_key');
+            if(!rKey) return alert("설정에서 Resend 키를 먼저 넣어주세요!");
+
+            const btn = document.getElementById('send-btn');
+            const msg = document.getElementById('status-msg');
+            
+            btn.disabled = true;
+            msg.innerText = "발송 중... 잠시만 기다려주세요! 🚀";
+
+            try {
+                const response = await fetch(SHEETS_API, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'send',
+                        apiKey: rKey,
+                        from: 'onboarding@resend.dev',
+                        recipients: ['ky1290@gmail.com'], // 원장님 테스트용
+                        subject: 'EduPath 주간 뉴스레터',
+                        html: document.getElementById('draft-content').innerHTML
+                    })
+                });
+                
+                const result = await response.json();
+                if(result.success || result.id) {
+                    msg.innerText = "✅ 발송 성공! 메일함을 확인하세요.";
+                } else {
+                    msg.innerText = "❌ 오류: " + JSON.stringify(result);
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                msg.innerText = "❌ 네트워크 에러: " + e.message;
+                btn.disabled = false;
+            }
         }
     </script>
 </body>

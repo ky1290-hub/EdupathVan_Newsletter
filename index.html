@@ -3,134 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>EduPath 마스터 본부</title>
+    <title>진단 모드</title>
     <style>
-        :root { --bg: #f8f9fa; --accent: #1a3a5c; --accent2: #2563a8; --border: #dee2e6; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
-        .card { background: white; border-radius: 12px; padding: 20px; border: 1px solid var(--border); margin: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .btn { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn-primary { background: var(--accent2); color: white; }
-        .btn-green { background: #1a6b3c; color: white; }
-        input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; font-size: 16px; background: #fff; }
-        .mobile-nav { position: fixed; bottom: 0; width: 100%; background: white; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); z-index: 1000; }
-        .mobile-nav-item { padding: 15px 5px; text-align: center; font-size: 11px; color: #666; font-weight: 600; }
-        #debug-log { background: #000; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; margin: 15px; border-radius: 8px; max-height: 100px; overflow-y: auto; }
+        body { background: #eee; padding: 20px; font-family: sans-serif; }
+        /* 절대 놓칠 수 없는 거대한 검은 박스 */
+        #log { 
+            background: black; color: #0f0; padding: 15px; 
+            border-radius: 10px; height: 150px; overflow-y: auto; 
+            font-size: 12px; margin-bottom: 20px; border: 5px solid red;
+        }
+        .input-group { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; font-size: 16px; }
+        button { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; }
     </style>
 </head>
 <body>
 
-    <div id="debug-log">🚀 시스템 가동 준비 완료...</div>
+    <div id="log">● 시스템 진단 시작...</div>
 
-    <div id="page-dashboard" class="page">
-        <div class="card">
-            <h3 style="margin:0; font-size:14px; color:#888;">실시간 구독자</h3>
-            <div style="font-size: 48px; font-weight: 800; color: var(--accent);">1,284 명</div>
-        </div>
+    <div class="input-group">
+        <strong>1. 클로드 키 입력</strong>
+        <input type="password" id="cKey" placeholder="sk-ant..." oninput="save('c', this.value)">
     </div>
 
-    <div id="page-generate" class="page" style="display:none">
-        <div class="card">
-            <h3>🔑 Claude 키 입력</h3>
-            <input type="password" id="claudeKey" placeholder="sk-ant-..." oninput="saveKey('claude', this.value)">
-            <button class="btn btn-primary" onclick="generateTest()">✨ 1단계: 글 생성 테스트</button>
-        </div>
+    <div class="input-group">
+        <strong>2. 리샌드 키 입력</strong>
+        <input type="password" id="rKey" placeholder="re_..." oninput="save('r', this.value)">
     </div>
 
-    <div id="page-approve" class="page" style="display:none">
-        <div class="card">
-            <h3>🚀 2단계: 메일 발송</h3>
-            <div id="send-status" style="color: blue; margin-bottom: 10px; font-weight: bold;"></div>
-            <button class="btn btn-green" onclick="sendTestEmail()">🚀 나에게 테스트 메일 쏘기</button>
-        </div>
-    </div>
-
-    <div id="page-settings" class="page" style="display:none">
-        <div class="card">
-            <h3>⚙️ Resend 키 입력</h3>
-            <input type="password" id="resendKey" placeholder="re_..." oninput="saveKey('resend', this.value)">
-            <p style="font-size:12px; color:#888;">키를 넣고 '현황' 탭을 눌러다 오면 저장됩니다.</p>
-        </div>
-    </div>
-
-    <nav class="mobile-nav">
-        <div class="mobile-nav-item" onclick="navigate('dashboard')">📊<br>현황</div>
-        <div class="mobile-nav-item" onclick="navigate('generate')">✨<br>생성</div>
-        <div class="mobile-nav-item" onclick="navigate('approve')">🚀<br>발송</div>
-        <div class="mobile-nav-item" onclick="navigate('settings')">⚙️<br>설정</div>
-    </nav>
+    <button onclick="testSend()">🚀 테스트 메일 발송</button>
 
     <script>
-        const SHEETS_API = 'https://script.google.com/macros/s/AKfycbwZ9AUZKUDM17RqXm05sZZpIJIXFOmXH01QrQxQ_4EEDYNEOo7kRO5I6NMcZih2yFs/exec';
-
-        function log(msg) {
-            const div = document.getElementById('debug-log');
-            div.innerHTML += "<br>> " + msg;
-            div.scrollTop = div.scrollHeight;
-        }
-
-        function navigate(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-            document.getElementById('page-' + pageId).style.display = 'block';
-            log(pageId + " 페이지로 이동함");
-        }
-
-        function saveKey(type, val) {
-            localStorage.setItem(type + '_api_key', val);
-            log(type + " 키 입력 중...");
+        const log = (m) => { document.getElementById('log').innerHTML += "<br>> " + m; };
+        
+        function save(t, v) {
+            localStorage.setItem(t, v);
+            log(t + " 키 입력됨 (저장 시도)");
         }
 
         window.onload = function() {
-            const cKey = localStorage.getItem('claude_api_key');
-            const rKey = localStorage.getItem('resend_api_key');
-            if (cKey) document.getElementById('claudeKey').value = cKey;
-            if (rKey) document.getElementById('resendKey').value = rKey;
-            log("저장된 키 불러오기 완료");
+            alert("새 코드가 정상적으로 로드되었습니다!"); // 이 창이 떠야 성공입니다.
+            document.getElementById('cKey').value = localStorage.getItem('c') || '';
+            document.getElementById('rKey').value = localStorage.getItem('r') || '';
+            log("저장된 데이터 불러옴");
         };
 
-        function generateTest() {
-            log("생성 시도 중...");
-            alert("테스트 데이터가 생성되었습니다. 발송 탭으로 가세요!");
-            localStorage.setItem('temp_content', 'EduPath 테스트 뉴스레터 내용입니다.');
-        }
-
-        async function sendTestEmail() {
-            const rKey = localStorage.getItem('resend_api_key');
-            if(!rKey) {
-                log("에러: Resend 키가 없습니다!");
-                return alert("설정 탭에서 Resend 키를 먼저 넣어주세요!");
-            }
-
-            log("발송 시작... (Google 서버 접속 중)");
-            document.getElementById('send-status').innerText = "발송 중...";
-
-            try {
-                const response = await fetch(SHEETS_API, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        action: 'send',
-                        apiKey: rKey,
-                        from: 'onboarding@resend.dev',
-                        recipients: ['ky1290@gmail.com'],
-                        subject: '아이폰 발송 테스트',
-                        html: localStorage.getItem('temp_content') || '내용 없음'
-                    })
-                });
-                
-                const resText = await response.text();
-                log("서버 응답: " + resText);
-                
-                if(resText.includes("success") || resText.includes("id")) {
-                    alert("성공! 원장님 메일함을 확인하세요.");
-                    document.getElementById('send-status').innerText = "✅ 발송 성공!";
-                } else {
-                    log("발송 실패 원인: " + resText);
-                    alert("실패: " + resText);
-                }
-            } catch(e) {
-                log("네트워크 오류: " + e.message);
-                alert("네트워크 에러가 발생했습니다.");
-            }
+        async function testSend() {
+            log("발송 버튼 클릭됨");
+            const r = localStorage.getItem('r');
+            if(!r) return alert("리샌드 키가 없습니다!");
+            
+            log("서버에 요청 보냄...");
+            // 여기에 원장님 구글 시트 주소를 넣어야 하지만, 일단 로그 뜨는지부터 봅시다!
         }
     </script>
 </body>

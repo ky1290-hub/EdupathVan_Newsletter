@@ -347,7 +347,7 @@ function restoreLastDraft() {
   if(document.getElementById('page-dashboard').classList.contains('active')) navigate('generate');
 }
 
-// 🧠 구글 Gemini AI로 뉴스레터 무료 자동 생성
+// 🧠 구글 Gemini AI로 뉴스레터 무료 자동 생성 (gemini-pro 모델 사용)
 async function generateNewsletter() {
   const apiKey = localStorage.getItem('gemini-api-key');
   if(!apiKey) return showNotif('상단에 Gemini API 키를 입력해주세요', 'error');
@@ -366,20 +366,24 @@ async function generateNewsletter() {
   {"subjects":["매력적인 이메일 제목 1", "제목 2"], "news":[{"headline":"명문대 입시 최신 동향", "summary":"실제 있을법한 2문장 요약", "source":"EduNews", "date":"2026.03"}], "community":[{"title":"밴쿠버 학부모 핫이슈", "content":"구체적인 내용", "platform":"커뮤니티"}], "hotspot":[{"name":"밴쿠버 추천 카페", "type":"카페", "desc":"분위기 좋은 카페", "area":"Downtown", "tip":"오전 추천"}]}`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    // ★ 에러 방지용: 가장 범용적인 gemini-pro 모델로 교체!
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { response_mime_type: "application/json" } // JSON 강제 옵션
+        contents: [{ parts: [{ text: prompt }] }]
       })
     });
 
     const data = await response.json();
     if(data.error) throw new Error(data.error.message);
     
-    const text = data.candidates[0].content.parts[0].text;
+    let text = data.candidates[0].content.parts[0].text;
+    
+    // 혹시라도 AI가 ```json 이라는 기호를 붙여 보내면 자동으로 청소
+    text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
     draftData = JSON.parse(text);
     draftData.adMsg = adMsg; draftData.ctaText = ctaText;
 
@@ -446,7 +450,7 @@ async function sendNewsletter() {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ 
-        action: 'sendMail', // ★ 구글 스크립트 설정에 맞춰 'sendMail' 또는 'send'로 동작
+        action: 'sendMail', 
         apiKey: apiKey, 
         from: from, 
         recipients: ["ky1290@gmail.com"], // 👈 테스트 이메일! 나중에 DB 연동 시 이 줄 변경

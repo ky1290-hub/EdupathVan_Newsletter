@@ -1,76 +1,485 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduPath 발송 시스템</title>
-    <style>
-        body { font-family: sans-serif; background: #f5f4f0; padding: 20px; line-height: 1.6; }
-        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
-        h2 { color: #1a3a5c; margin-top: 0; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
-        .btn-restore { background: #eee; color: #333; }
-        .btn-send { background: #1a6b3c; color: white; display: none; }
-        #status { margin-top: 20px; font-weight: bold; color: #2563a8; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduPath 뉴스레터 자동화 시스템</title>
+<style>
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f9f8f5; --border: #e2e0d8;
+    --text: #1a1916; --text2: #6b6960; --text3: #9b9890; --accent: #1a3a5c;
+    --accent2: #2563a8; --green: #1a6b3c; --green-bg: #e8f5ee; --amber: #92580a;
+    --amber-bg: #fef3e2; --red: #991b1b; --red-bg: #fef2f2; --purple: #5b21b6;
+    --purple-bg: #f3f0ff; --radius: 10px; --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
+  .app { display: flex; min-height: 100vh; }
+  .sidebar { width: 240px; background: var(--accent); color: #e8ecf0; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-logo .brand { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+  .sidebar-logo .sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 12px 0; }
+  .nav-section { padding: 16px 16px 4px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.35); letter-spacing: 0.8px; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; color: rgba(255,255,255,0.65); font-size: 13px; transition: all 0.15s; border-radius: 0; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; }
+  .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+  .sidebar-bottom { padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: rgba(255,255,255,0.4); }
+  .sidebar-bottom .badge { display: inline-block; background: rgba(255,255,255,0.12); padding: 2px 8px; border-radius: 20px; font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 6px; }
+  .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  .topbar-title { font-size: 16px; font-weight: 600; }
+  .topbar-actions { display: flex; gap: 10px; align-items: center; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text); transition: all 0.15s; text-decoration: none; }
+  .btn:hover { background: var(--surface2); }
+  .btn-primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .btn-primary:hover { background: #1a4d8f; border-color: #1a4d8f; }
+  .btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+  .btn-green:hover { background: #145830; border-color: #145830; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .content { padding: 28px; flex: 1; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
+  .stat-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-value { font-size: 26px; font-weight: 700; color: var(--text); margin-top: 4px; letter-spacing: -0.5px; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .stat-delta { font-size: 11px; font-weight: 600; }
+  .stat-delta.up { color: var(--green); }
+  .stat-delta.down { color: var(--red); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 18px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-body { padding: 20px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .draft-section { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .draft-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .section-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
+  .tag-news { background: #dbeafe; color: #1e40af; }
+  .tag-community { background: var(--purple-bg); color: var(--purple); }
+  .tag-ad { background: var(--amber-bg); color: var(--amber); }
+  .news-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .news-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent2); color: #fff; font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .news-content .headline { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.4; }
+  .news-content .summary { font-size: 12px; color: var(--text2); margin-top: 4px; line-height: 1.5; }
+  .news-content .meta { font-size: 11px; color: var(--text3); margin-top: 5px; }
+  .news-content .meta span { margin-right: 10px; }
+  .loading-wrap { padding: 60px 20px; text-align: center; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent2); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-ready { background: var(--green-bg); color: var(--green); }
+  .badge-sent { background: #dbeafe; color: #1e40af; }
+  .badge-pending { background: var(--amber-bg); color: var(--amber); }
+  .topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .topic-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); cursor: pointer; transition: all 0.15s; background: var(--surface); }
+  .topic-item:hover { border-color: var(--accent2); background: #f0f6ff; }
+  .topic-item.selected { border-color: var(--accent2); background: #eff6ff; }
+  .topic-item input[type=checkbox] { accent-color: var(--accent2); width: 14px; height: 14px; }
+  .topic-label { font-size: 12px; font-weight: 500; }
+  .topic-icon { font-size: 15px; }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent2); border-radius: 2px; transition: width 0.5s ease; }
+  .history-table { width: 100%; border-collapse: collapse; }
+  .history-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .history-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text); }
+  input[type=text], input[type=email], input[type=password], select, textarea { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: 13px; font-family: inherit; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent2); }
+  textarea { min-height: 80px; resize: vertical; }
+  .notif { position: fixed; top: 70px; right: 24px; z-index: 999; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); font-size: 13px; max-width: 320px; transform: translateX(120%); transition: transform 0.3s ease; }
+  .notif.show { transform: translateX(0); }
+  .notif.success { border-left: 3px solid var(--green); }
+  .notif.error { border-left: 3px solid var(--red); }
+  .notif.info { border-left: 3px solid var(--accent2); }
+  .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty .title { font-size: 15px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+  .send-confirm { background: var(--green-bg); border: 1px solid #86efac; border-radius: var(--radius); padding: 16px 18px; margin-top: 16px; display: none; }
+  .send-confirm.show { display: block; }
+</style>
 </head>
 <body>
-    <div class="card">
-        <h2>📊 발송 본부</h2>
-        <p>기존에 생성한 뉴스레터 원고를 불러와주세요.</p>
-        <button class="btn-restore" onclick="restore()">🔄 이전 원고 불러오기</button>
-        <div id="status"></div>
-        <button id="btn-real" class="btn-send" onclick="startSend()">🚀 1,284명에게 발송 시작</button>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">EduPath</div>
+      <div class="sub">뉴스레터 자동화 시스템</div>
     </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">메인</div>
+      <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">📊</span> 대시보드</div>
+      <div class="nav-item" onclick="navigate('generate')"><span class="icon">✨</span> AI 뉴스레터 생성</div>
+      <div class="nav-item" onclick="navigate('approve')"><span class="icon">✅</span> 승인 · 발송<span id="approve-badge" style="margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;display:none">1</span></div>
+      <div class="nav-section">관리</div>
+      <div class="nav-item" onclick="navigate('history')"><span class="icon">📋</span> 발송 이력</div>
+      <div class="nav-item" onclick="navigate('settings')"><span class="icon">⚙️</span> 설정</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div>Gemini AI (무료) 연동</div>
+      <div class="badge">● 활성됨</div>
+    </div>
+  </aside>
 
-    <script>
-        // 최신 주소 및 완벽하게 수정된 발송 로직
-        const API = 'https://script.google.com/macros/s/AKfycbwsbzkC8Puw_FgnIiHBudJSX54rvXyihAXZLtIUOG1j9zLS_ovqJpsCkTrx6UjWOSs/exec';
-        let currentDraft = null;
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-title" id="topbar-title">대시보드</div>
+      <div class="topbar-actions">
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="password" id="gemini-api-key" placeholder="Gemini API 키 (무료)" style="font-size:11px;padding:5px 10px;width:200px" onchange="saveGeminiKey(this.value)">
+          <span id="gemini-key-status" style="font-size:11px">🔑</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="navigate('generate')">✨ 새 뉴스레터 생성</button>
+      </div>
+    </header>
 
-        function restore() {
-            const saved = localStorage.getItem('edupath_last_draft');
-            if(!saved) {
-                alert("저장된 원고가 없습니다.");
-                return;
-            }
-            currentDraft = JSON.parse(saved);
-            document.getElementById('status').innerText = "✅ 불러오기 성공: " + currentDraft.subjects[0];
-            document.getElementById('btn-real').style.display = "block";
-        }
+    <div class="content">
 
-        async function startSend() {
-            const key = localStorage.getItem('resend-api-key');
-            if(!key) return alert("API 키를 확인해주세요.");
-            if(!confirm("진짜 발송할까요?")) return;
+      <div id="page-dashboard" class="page active">
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-label">총 구독자</div>
+            <div class="stat-value" id="total-subscribers">1,284</div>
+            <div class="stat-sub"><span class="stat-delta up">↑ +47</span> 지난주 대비</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">평균 오픈율</div>
+            <div class="stat-value">38.4%</div>
+            <div class="stat-sub"><span class="stat-delta up">↑ +3.2%</span> 업계 평균 대비</div>
+          </div>
+        </div>
 
-            document.getElementById('btn-real').innerText = "⏳ 발송 중...";
-            document.getElementById('btn-real').disabled = true;
+        <div class="grid-2" style="margin-bottom:18px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">이번 주 발송 현황</div>
+              <span class="badge badge-pending">대기중</span>
+            </div>
+            <div class="card-body">
+              <div style="font-size:13px;color:var(--text2);margin-bottom:16px">다음 뉴스레터가 아직 생성되지 않았습니다.</div>
+              <button class="btn btn-primary" style="width:100%; margin-bottom:10px;" onclick="navigate('generate')">✨ 지금 생성하기</button>
+              <button class="btn" style="width:100%; background:#e8f0fe; color:#1a73e8; border:1px solid #d2e3fc;" onclick="restoreLastDraft()">🔄 작성 중이던 원고 무료로 복구하기</button>
+            </div>
+          </div>
 
-            try {
-                const response = await fetch(API, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8' 
-                    },
-                    body: JSON.stringify({ action: 'send', apiKey: key, data: currentDraft })
-                });
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">구독자 관심사 분포</div>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>🎓 아이비리그 · 명문대 입시</span><span style="font-weight:600">68%</span></div><div class="progress-bar"><div class="progress-fill" style="width:68%"></div></div></div>
+                <div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>🏫 밴쿠버 사립학교</span><span style="font-weight:600">54%</span></div><div class="progress-bar"><div class="progress-fill" style="width:54%;background:#8b5cf6"></div></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                const result = await response.json();
-                
-                if(result.success === false) {
-                    alert("구글 서버 내부 오류: " + result.error);
-                } else {
-                    alert("🚀 진짜 발송 완료! 구글 시트와 메일함을 확인하세요.");
-                }
+      <div id="page-generate" class="page">
+        <div class="grid-2">
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header"><div class="card-title">콘텐츠 주제 선택</div></div>
+              <div class="card-body">
+                <div class="topic-grid" id="topic-grid">
+                  <label class="topic-item selected"><input type="checkbox" value="ivy" checked> <span class="topic-icon">🎓</span><span class="topic-label">Ivy + Top 20 입시</span></label>
+                  <label class="topic-item selected"><input type="checkbox" value="private" checked> <span class="topic-icon">🏫</span><span class="topic-label">밴쿠버 사립학교</span></label>
+                  <label class="topic-item"><input type="checkbox" value="realestate"> <span class="topic-icon">🏠</span><span class="topic-label">부동산·렌트시세</span></label>
+                  <label class="topic-item"><input type="checkbox" value="locallife"> <span class="topic-icon">🌆</span><span class="topic-label">밴쿠버 로컬뉴스</span></label>
+                </div>
+              </div>
+            </div>
 
-            } catch(e) {
-                alert("연결 자체가 실패했습니다: " + e.message);
-            } finally {
-                document.getElementById('btn-real').innerText = "🚀 1,284명에게 발송 시작";
-                document.getElementById('btn-real').disabled = false;
-            }
-        }
-    </script>
+            <div class="card">
+              <div class="card-header"><div class="card-title">광고 섹션 설정</div></div>
+              <div class="card-body">
+                <div style="margin-bottom:14px">
+                  <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">광고 메시지</label>
+                  <textarea id="ad-message">아이비리그 입시, 혼자 준비하지 마세요. EduPath는 데이터 기반 맞춤 전략으로 합격생을 배출합니다. 지금 무료 진단 상담을 신청하세요.</textarea>
+                </div>
+                <div>
+                  <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">CTA 버튼 텍스트</label>
+                  <input type="text" id="cta-text" value="무료 상담 신청하기 →">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="card" id="generate-card">
+              <div class="card-header"><div class="card-title">Gemini AI 뉴스레터 생성</div></div>
+              <div class="card-body" id="generate-body">
+                <div style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">
+                  Google Gemini AI가 선택된 주제의 최신 정보를 분석해 한국 교민 학부모 대상 뉴스레터를 <b>무료로</b> 자동으로 작성합니다.
+                </div>
+                <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="generate-btn" onclick="generateNewsletter()">
+                  ✨ AI 뉴스레터 생성 시작 (무료)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="draft-result" style="margin-top:20px;display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 style="font-size:15px;font-weight:600">생성된 뉴스레터 초안</h3>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary btn-sm" onclick="approveDraft()">✅ 승인 페이지로 이동</button>
+            </div>
+          </div>
+          <div id="draft-content"></div>
+        </div>
+      </div>
+
+      <div id="page-approve" class="page">
+        <div id="no-draft-msg" class="empty">
+          <div class="icon">📭</div>
+          <div class="title">승인 대기 중인 뉴스레터가 없습니다</div>
+          <button class="btn btn-primary" onclick="navigate('generate')">✨ 뉴스레터 생성하기</button>
+          <button class="btn" style="margin-top:10px;" onclick="restoreLastDraft()">🔄 이전 원고 불러오기</button>
+        </div>
+        <div id="approve-content" style="display:none">
+          <div class="grid-2" style="margin-bottom:18px">
+            <div class="card">
+              <div class="card-header"><div class="card-title">발송 설정</div></div>
+              <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+                <div>
+                  <label style="font-size:12px;font-weight:600;display:block;margin-bottom:5px">이메일 제목 선택</label>
+                  <select id="subject-select" style="width:100%"><option>로딩 중...</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">최종 발송 확정</div>
+              <span class="badge badge-ready">승인 대기</span>
+            </div>
+            <div class="card-body">
+              <div id="approve-draft-view" style="padding:15px; background:#f9f8f5; border-radius:8px; margin-bottom:20px;"></div>
+              
+              <div class="send-confirm" id="send-confirm"></div>
+              
+              <div style="display:flex;gap:10px;margin-top:20px" id="send-btns">
+                <button class="btn btn-green" style="flex:1;justify-content:center;padding:12px;font-size:15px;" onclick="sendNewsletter()">
+                  🚀 1,284명에게 일괄 발송 확정
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="page-settings" class="page">
+        <div class="card" style="margin-bottom:18px">
+          <div class="card-header"><div class="card-title">📧 Resend 이메일 발송 연동</div></div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+              <div><label style="font-size:12px;font-weight:600;">Resend API 키</label><input type="password" id="resend-api-key" placeholder="re_..." style="width:100%"></div>
+              <div><label style="font-size:12px;font-weight:600;">발신자 이메일</label><input type="email" id="resend-from" value="EduPath <onboarding@resend.dev>" style="width:100%"></div>
+            </div>
+            <button class="btn btn-primary" onclick="saveResendSettings()" style="width:100%;justify-content:center">💾 발송 설정 저장</button>
+          </div>
+        </div>
+      </div>
+      
+      <div id="page-history" class="page">
+        <div class="card"><div class="card-header"><div class="card-title">최근 발송 이력</div></div><div class="card-body">준비 중입니다. 발송 시 구글 시트에 자동 기록됩니다.</div></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ★ 밤새 뚫어놓은 구글 발송 엔진 서버!
+const SHEETS_API = 'https://script.google.com/macros/s/AKfycbxgeuwkSDBpiiojQ8hMUXaQrMCqG0HH7Vzmz4ARUmnvfH9ATMLvKLMGk8ThQJyZPB8/exec';
+let draftData = null;
+
+// 네비게이션
+function navigate(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('topbar-title').textContent = page.toUpperCase();
+  document.getElementById('page-' + page).classList.add('active');
+  
+  if(page === 'approve') {
+    if(draftData) {
+      document.getElementById('no-draft-msg').style.display = 'none';
+      document.getElementById('approve-content').style.display = 'block';
+      renderApproveDraft();
+    } else {
+      document.getElementById('no-draft-msg').style.display = 'block';
+      document.getElementById('approve-content').style.display = 'none';
+    }
+  }
+}
+
+// 알림창
+function showNotif(msg, type) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = 'notif ' + (type||'info') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// 💾 무료 복구 기능 (안전장치)
+function restoreLastDraft() {
+  const saved = localStorage.getItem('edupath_last_draft');
+  if(!saved) return showNotif("저장된 원고가 없습니다.", "error");
+  
+  draftData = JSON.parse(saved);
+  document.getElementById('approve-badge').style.display = 'flex';
+  renderDraft(draftData, draftData.adMsg, draftData.ctaText);
+  document.getElementById('draft-result').style.display = 'block';
+  showNotif("✅ 이전 원고를 성공적으로 복구했습니다!", "success");
+  if(document.getElementById('page-dashboard').classList.contains('active')) navigate('generate');
+}
+
+// 🧠 구글 Gemini AI로 뉴스레터 무료 자동 생성
+async function generateNewsletter() {
+  const apiKey = localStorage.getItem('gemini-api-key');
+  if(!apiKey) return showNotif('상단에 Gemini API 키를 입력해주세요', 'error');
+
+  const btn = document.getElementById('generate-btn');
+  const body = document.getElementById('generate-body');
+  btn.disabled = true; btn.textContent = 'AI가 기사를 찾고 작성 중입니다... (약 15초)';
+  body.innerHTML = '<div class="loading-wrap"><div class="spinner"></div><div class="loading-text">Gemini AI가 무료로 뉴스를 분석 중입니다...</div></div>';
+
+  const adMsg = document.getElementById('ad-message').value;
+  const ctaText = document.getElementById('cta-text').value;
+
+  // 프롬프트: 제미나이에게 완벽한 JSON을 요구합니다.
+  const prompt = `당신은 밴쿠버 교육 뉴스레터 에디터입니다. 
+  다음 형식의 JSON만 정확히 출력하세요. 마크다운(\`\`\`) 없이 순수 JSON만 반환하세요.
+  {"subjects":["매력적인 이메일 제목 1", "제목 2"], "news":[{"headline":"명문대 입시 최신 동향", "summary":"실제 있을법한 2문장 요약", "source":"EduNews", "date":"2026.03"}], "community":[{"title":"밴쿠버 학부모 핫이슈", "content":"구체적인 내용", "platform":"커뮤니티"}], "hotspot":[{"name":"밴쿠버 추천 카페", "type":"카페", "desc":"분위기 좋은 카페", "area":"Downtown", "tip":"오전 추천"}]}`;
+
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { response_mime_type: "application/json" } // JSON 강제 옵션
+      })
+    });
+
+    const data = await response.json();
+    if(data.error) throw new Error(data.error.message);
+    
+    const text = data.candidates[0].content.parts[0].text;
+    draftData = JSON.parse(text);
+    draftData.adMsg = adMsg; draftData.ctaText = ctaText;
+
+    // ★ 핵심: 금고(로컬스토리지)에 저장!
+    localStorage.setItem('edupath_last_draft', JSON.stringify(draftData));
+    
+    document.getElementById('approve-badge').style.display = 'flex';
+    body.innerHTML = '<div style="color:var(--green);font-weight:600;margin-bottom:16px;">✅ 생성 성공! 자동 저장되었습니다.</div><button class="btn btn-primary" style="width:100%;padding:12px" onclick="generateNewsletter()">🔄 다시 생성하기</button>';
+    
+    renderDraft(draftData, adMsg, ctaText);
+    document.getElementById('draft-result').style.display = 'block';
+    showNotif("✅ 생성 완료! 아래에서 초안을 확인하세요.", "success");
+
+  } catch(e) {
+    btn.disabled = false; btn.textContent = '✨ AI 뉴스레터 생성 시작 (무료)';
+    body.innerHTML = `<div style="color:var(--red);margin-bottom:16px;">⚠️ 오류: ${e.message}</div><button class="btn btn-primary" style="width:100%" onclick="generateNewsletter()">다시 시도</button>`;
+  }
+}
+
+// 화면에 초안 그리기
+function renderDraft(data, adMsg, ctaText) {
+  let html = '';
+  html += '<div class="draft-section"><div class="draft-section-header">📰 주요 뉴스</div>';
+  data.news.forEach((n, i) => html += `<div class="news-item"><div class="news-num">${i+1}</div><div class="news-content"><div class="headline">${n.headline}</div><div class="summary">${n.summary}</div></div></div>`);
+  html += '</div>';
+  
+  html += '<div class="draft-section"><div class="draft-section-header">📣 광고 섹션</div>';
+  html += `<div style="font-size:13px;line-height:1.7;">${adMsg}</div><div style="margin-top:10px"><span style="background:var(--accent2);color:#fff;padding:6px 12px;border-radius:6px;font-size:12px;">${ctaText}</span></div></div>`;
+
+  document.getElementById('draft-content').innerHTML = html;
+  
+  const sel = document.getElementById('subject-select');
+  if(sel && data.subjects) sel.innerHTML = data.subjects.map((s,i) => `<option value="${i}">${s}</option>`).join('');
+}
+
+function renderApproveDraft() {
+  document.getElementById('approve-draft-view').innerHTML = document.getElementById('draft-content').innerHTML;
+}
+function approveDraft() { navigate('approve'); }
+
+// 🚀 최종 발송 엔진 (어제 밤의 걸작)
+async function sendNewsletter() {
+  const apiKey = localStorage.getItem('resend-api-key');
+  const from = localStorage.getItem('resend-from') || 'EduPath <onboarding@resend.dev>';
+  
+  if(!draftData) return showNotif('뉴스레터 초안이 없습니다.', 'error');
+  if(!apiKey) { navigate('settings'); return showNotif('설정에서 Resend API 키를 확인하세요.', 'error'); }
+
+  const sel = document.getElementById('subject-select');
+  const subject = draftData.subjects ? draftData.subjects[sel.value || 0] : 'EduPath 뉴스레터';
+  
+  // HTML 구성 (단순화)
+  let emailHtml = `<h2>${subject}</h2>`;
+  draftData.news.forEach(n => emailHtml += `<h3>${n.headline}</h3><p>${n.summary}</p><hr>`);
+  emailHtml += `<br><p><strong>${draftData.adMsg}</strong></p><a href="https://open.kakao.com/o/sCnRG2ki">${draftData.ctaText}</a>`;
+
+  document.getElementById('send-btns').style.display = 'none';
+  const confirmDiv = document.getElementById('send-confirm');
+  confirmDiv.classList.add('show');
+  confirmDiv.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner"></div><div>구글 서버로 발송 명령을 전달하는 중...</div></div>';
+
+  try {
+    const res = await fetch(SHEETS_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ 
+        action: 'sendMail', // ★ 구글 스크립트 설정에 맞춰 'sendMail' 또는 'send'로 동작
+        apiKey: apiKey, 
+        from: from, 
+        recipients: ["ky1290@gmail.com"], // 👈 테스트 이메일! 나중에 DB 연동 시 이 줄 변경
+        subject: subject, 
+        html: emailHtml,
+        data: draftData
+      })
+    });
+
+    const result = await res.json();
+    if(result.success === false) throw new Error(result.error);
+
+    confirmDiv.innerHTML = `<div style="text-align:center;padding:20px"><div style="font-size:30px">🎉</div><div style="font-weight:bold;color:var(--green)">발송 성공!</div><div style="font-size:12px;color:var(--text2)">구글 시트와 메일함을 확인하세요.</div></div>`;
+    showNotif("발송 완료!", "success");
+
+  } catch(e) {
+    document.getElementById('send-btns').style.display = 'flex';
+    confirmDiv.innerHTML = `<div style="color:red;text-align:center;padding:10px">❌ 에러: ${e.message}</div>`;
+  }
+}
+
+// 키 저장 처리
+function saveGeminiKey(val) { localStorage.setItem('gemini-api-key', val); document.getElementById('gemini-key-status').textContent = val ? '✅' : '🔑'; showNotif('Gemini 키 저장됨', 'success'); }
+function saveResendSettings() { localStorage.setItem('resend-api-key', document.getElementById('resend-api-key').value); localStorage.setItem('resend-from', document.getElementById('resend-from').value); showNotif('발송 설정 저장됨', 'success'); }
+
+// 초기화
+window.onload = function() {
+  const gk = localStorage.getItem('gemini-api-key');
+  if(gk) { document.getElementById('gemini-api-key').value = gk; document.getElementById('gemini-key-status').textContent = '✅'; }
+  if(localStorage.getItem('resend-api-key')) document.getElementById('resend-api-key').value = localStorage.getItem('resend-api-key');
+  if(localStorage.getItem('resend-from')) document.getElementById('resend-from').value = localStorage.getItem('resend-from');
+  navigate('dashboard');
+}
+</script>
 </body>
 </html>

@@ -366,7 +366,7 @@ async function generateNewsletter() {
   {"subjects":["매력적인 이메일 제목 1", "제목 2"], "news":[{"headline":"명문대 입시 최신 동향", "summary":"실제 있을법한 2문장 요약", "source":"EduNews", "date":"2026.03"}], "community":[{"title":"밴쿠버 학부모 핫이슈", "content":"구체적인 내용", "platform":"커뮤니티"}], "hotspot":[{"name":"밴쿠버 추천 카페", "type":"카페", "desc":"분위기 좋은 카페", "area":"Downtown", "tip":"오전 추천"}]}`;
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

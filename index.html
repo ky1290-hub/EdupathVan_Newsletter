@@ -1,66 +1,51 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduPath 발송 시스템</title>
-    <style>
-        body { font-family: sans-serif; background: #f5f4f0; padding: 20px; line-height: 1.6; }
-        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
-        h2 { color: #1a3a5c; margin-top: 0; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
-        .btn-restore { background: #eee; color: #333; }
-        .btn-send { background: #1a6b3c; color: white; display: none; }
-        #status { margin-top: 20px; font-weight: bold; color: #2563a8; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2>📊 발송 본부</h2>
-        <p>기존에 생성한 뉴스레터 원고를 불러와주세요.</p>
-        <button class="btn-restore" onclick="restore()">🔄 이전 원고 불러오기</button>
-        <div id="status"></div>
-        <button id="btn-real" class="btn-send" onclick="startSend()">🚀 1,284명에게 발송 시작</button>
-    </div>
+<script>
+    const API = 'https://script.google.com/macros/s/AKfycbxgeuwkSDBpiiojQ8hMUXaQrMCqG0HH7Vzmz4ARUmnvfH9ATMLvKLMGk8ThQJyZPB8/exec';
+    let currentDraft = null;
 
-    <script>
-        // 원장님이 주신 최신 주소입니다. 따옴표 오타 없게 제가 직접 넣었습니다.
-        const API = 'https://script.google.com/macros/s/AKfycbxgeuwkSDBpiiojQ8hMUXaQrMCqG0HH7Vzmz4ARUmnvfH9ATMLvKLMGk8ThQJyZPB8/exec';
-        let currentDraft = null;
-
-        function restore() {
-            const saved = localStorage.getItem('edupath_last_draft');
-            if(!saved) {
-                alert("저장된 원고가 없습니다.");
-                return;
-            }
-            currentDraft = JSON.parse(saved);
-            document.getElementById('status').innerText = "✅ 불러오기 성공: " + currentDraft.subjects[0];
-            document.getElementById('btn-real').style.display = "block";
+    function restore() {
+        const saved = localStorage.getItem('edupath_last_draft');
+        if(!saved) {
+            alert("저장된 원고가 없습니다.");
+            return;
         }
+        currentDraft = JSON.parse(saved);
+        document.getElementById('status').innerText = "✅ 불러오기 성공: " + currentDraft.subjects[0];
+        document.getElementById('btn-real').style.display = "block";
+    }
 
-        async function startSend() {
-            const key = localStorage.getItem('resend-api-key');
-            if(!key) return alert("API 키를 확인해주세요.");
-            if(!confirm("진짜 발송할까요?")) return;
+    async function startSend() {
+        const key = localStorage.getItem('resend-api-key');
+        if(!key) return alert("API 키를 확인해주세요.");
+        if(!confirm("진짜 발송할까요?")) return;
 
-            document.getElementById('btn-real').innerText = "⏳ 발송 중...";
-            document.getElementById('btn-real').disabled = true;
+        document.getElementById('btn-real').innerText = "⏳ 발송 중...";
+        document.getElementById('btn-real').disabled = true;
 
-            try {
-                await fetch(API, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify({ action: 'sendMail', apiKey: key, data: currentDraft })
-                });
-                alert("🚀 발송 완료! 구글 시트를 확인하세요.");
-            } catch(e) {
-                alert("오류 발생: " + e.message);
-            } finally {
-                document.getElementById('btn-real').innerText = "🚀 1,284명에게 발송 시작";
-                document.getElementById('btn-real').disabled = false;
+        try {
+            // [핵심 수정 1] no-cors를 지우고, 구글이 읽을 수 있는 이름표(headers)를 달았습니다.
+            const response = await fetch(API, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8' 
+                },
+                // [핵심 수정 2] 액션 이름을 구글 시트에 맞게 'send'로 바꿨습니다.
+                body: JSON.stringify({ action: 'send', apiKey: key, data: currentDraft })
+            });
+
+            // [핵심 수정 3] 구글 서버의 진짜 응답을 확인합니다.
+            const result = await response.json();
+            
+            if(result.success === false) {
+                alert("구글 서버 내부 오류: " + result.error);
+            } else {
+                alert("🚀 진짜 발송 완료! 구글 시트를 확인하세요.");
             }
+
+        } catch(e) {
+            alert("연결 자체가 실패했습니다: " + e.message);
+        } finally {
+            document.getElementById('btn-real').innerText = "🚀 1,284명에게 발송 시작";
+            document.getElementById('btn-real').disabled = false;
         }
-    </script>
-</body>
-</html>
+    }
+</script>

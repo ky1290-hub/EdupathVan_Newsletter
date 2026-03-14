@@ -360,11 +360,17 @@ async function generateNewsletter() {
   const adMsg = document.getElementById('ad-message').value;
   const ctaText = document.getElementById('cta-text').value;
 
-  // 프롬프트: 제미나이에게 완벽한 JSON을 요구합니다.
+  // 프롬프트: 제미나이에게 완벽한 JSON을 요구합니다. (이 부분을 아래 내용으로 바꿔주세요)
   const prompt = `당신은 밴쿠버 교육 뉴스레터 에디터입니다. 
-  다음 형식의 JSON만 정확히 출력하세요. 마크다운(\`\`\`) 없이 순수 JSON만 반환하세요.
-  {"subjects":["매력적인 이메일 제목 1", "제목 2"], "news":[{"headline":"명문대 입시 최신 동향", "summary":"실제 있을법한 2문장 요약", "source":"EduNews", "date":"2026.03"}], "community":[{"title":"밴쿠버 학부모 핫이슈", "content":"구체적인 내용", "platform":"커뮤니티"}], "hotspot":[{"name":"밴쿠버 추천 카페", "type":"카페", "desc":"분위기 좋은 카페", "area":"Downtown", "tip":"오전 추천"}]}`;
-
+  반드시 아래 규칙을 지켜서 JSON 형식으로만 출력하세요.
+  
+  1. 기사(news)는 반드시 최신 밴쿠버 입시/교육 트렌드와 관련된 내용으로 '3개에서 5개' 사이로 작성하세요.
+  2. 커뮤니티(community) 핫이슈를 2개 작성하세요.
+  3. 로컬 핫스팟(hotspot) 추천을 2개 작성하세요.
+  
+  형식:
+  {"subjects":["제목1", "제목2"], "news":[{"headline":"기사제목", "summary":"2문장 요약", "source":"출처", "date":"2026.03"}], "community":[{"title":"이슈", "content":"내용", "platform":"출처"}], "hotspot":[{"name":"장소", "type":"분류", "desc":"설명", "area":"지역", "tip":"꿀팁"}]}`;
+  
   try {
     // ★ 에러 방지용: 가장 범용적인 gemini-pro 모델로 교체!
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;

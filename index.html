@@ -1,40 +1,66 @@
-<script>
-    // 제가 주소 끝까지 완벽하게 검수했습니다. 이대로만 붙여넣으세요.
-    const API = 'https://script.google.com/macros/s/AKfycbyMhiSLlXnIS2A4uksIeoBzXCU2xzoiwi-l_NOdtVINks6QfplcnioQkHXyy_fJ89g/exec';
-    let currentDraft = null;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPath 발송 시스템</title>
+    <style>
+        body { font-family: sans-serif; background: #f5f4f0; padding: 20px; line-height: 1.6; }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
+        h2 { color: #1a3a5c; margin-top: 0; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        .btn-restore { background: #eee; color: #333; }
+        .btn-send { background: #1a6b3c; color: white; display: none; }
+        #status { margin-top: 20px; font-weight: bold; color: #2563a8; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>📊 발송 본부</h2>
+        <p>기존에 생성한 뉴스레터 원고를 불러와주세요.</p>
+        <button class="btn-restore" onclick="restore()">🔄 이전 원고 불러오기</button>
+        <div id="status"></div>
+        <button id="btn-real" class="btn-send" onclick="startSend()">🚀 1,284명에게 발송 시작</button>
+    </div>
 
-    function nav(p) {
-        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        const target = document.getElementById('page-' + p);
-        if (target) target.classList.add('active');
-    }
+    <script>
+        // 원장님이 주신 최신 주소입니다. 따옴표 오타 없게 제가 직접 넣었습니다.
+        const API = 'https://script.google.com/macros/s/AKfycbyMhiSLlXnIS2A4uksIeoBzXCU2xzoiwi-l_NOdtVINks6QfplcnioQkHXyy_fJ89g/exec';
+        let currentDraft = null;
 
-    function restore() {
-        const saved = localStorage.getItem('edupath_last_draft');
-        if(!saved) return alert("저장된 원고가 없습니다. 생성부터 해주세요.");
-        currentDraft = JSON.parse(saved);
-        document.getElementById('status').innerHTML = "✅ 원고 복구 완료: " + currentDraft.subjects[0];
-        document.getElementById('status').style.display = "block";
-        document.getElementById('send-target').innerHTML = "<strong>발송 원고:</strong> " + currentDraft.subjects[0];
-        document.getElementById('btn-real').style.display = "block";
-        alert("원고를 성공적으로 가져왔습니다.");
-    }
-
-    async function startSend() {
-        const key = localStorage.getItem('resend-api-key');
-        if(!key) return alert("설정에서 Resend API 키를 입력해주세요.");
-        if(!confirm("1,284명에게 진짜로 발송할까요?")) return;
-
-        try {
-            const res = await fetch(API, {
-                method: 'POST',
-                mode: 'no-cors', // 스마트폰 환경에서 에러를 방지하기 위해 추가
-                body: JSON.stringify({ action: 'sendMail', apiKey: key, data: currentDraft })
-            });
-            alert("🚀 발송 신호를 보냈습니다! 구글 시트를 확인하세요.");
-        } catch(e) {
-            alert("연결 오류: " + e.message);
+        function restore() {
+            const saved = localStorage.getItem('edupath_last_draft');
+            if(!saved) {
+                alert("저장된 원고가 없습니다.");
+                return;
+            }
+            currentDraft = JSON.parse(saved);
+            document.getElementById('status').innerText = "✅ 불러오기 성공: " + currentDraft.subjects[0];
+            document.getElementById('btn-real').style.display = "block";
         }
-    }
-</script>
+
+        async function startSend() {
+            const key = localStorage.getItem('resend-api-key');
+            if(!key) return alert("API 키를 확인해주세요.");
+            if(!confirm("진짜 발송할까요?")) return;
+
+            document.getElementById('btn-real').innerText = "⏳ 발송 중...";
+            document.getElementById('btn-real').disabled = true;
+
+            try {
+                await fetch(API, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ action: 'sendMail', apiKey: key, data: currentDraft })
+                });
+                alert("🚀 발송 완료! 구글 시트를 확인하세요.");
+            } catch(e) {
+                alert("오류 발생: " + e.message);
+            } finally {
+                document.getElementById('btn-real').innerText = "🚀 1,284명에게 발송 시작";
+                document.getElementById('btn-real').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

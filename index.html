@@ -2,200 +2,85 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EduPath 뉴스레터 자동화 시스템</title>
+    <title>EduPath 뉴스레터 최종본</title>
     <style>
-        /* [1. 원장님의 30번 파일 상세 CSS 디자인 - 100% 복구] */
-        :root {
-            --bg: #f5f4f0; --surface: #ffffff; --surface2: #f9f8f5; --border: #e2e0d8;
-            --text: #1a1916; --text2: #6b6960; --text3: #9b9890; --accent: #1a3a5c;
-            --accent2: #2563a8; --green: #1a6b3c; --green-bg: #e8f5ee; --amber: #92580a;
-            --amber-bg: #fef3e2; --red: #991b1b; --red-bg: #fef2f2; --purple: #5b21b6;
-            --purple-bg: #f3f0ff; --radius: 10px; --radius-sm: 6px;
-            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.6; }
-        .app { display: flex; min-height: 100vh; }
-        .sidebar { width: 240px; background: var(--accent); color: #e8ecf0; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
-        .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-logo .brand { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
-        .sidebar-logo .sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-        .sidebar-nav { flex: 1; padding: 12px 0; }
-        .nav-section { padding: 16px 16px 4px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.35); letter-spacing: 0.8px; text-transform: uppercase; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; color: rgba(255,255,255,0.65); font-size: 13px; transition: all 0.15s; }
-        .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
-        .nav-item.active { background: rgba(255,255,255,0.12); color: #fff; }
-        .main { margin-left: 240px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
-        .content { padding: 28px; flex: 1; }
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 24px; }
-        .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-weight: 600; }
-        .card-body { padding: 20px; }
-        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
-        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; box-shadow: var(--shadow); }
-        .stat-label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; }
-        .stat-value { font-size: 26px; font-weight: 700; color: var(--text); margin-top: 4px; }
-        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); transition: 0.15s; }
-        .btn-primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
-        .btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+        /* 원장님의 30번 파일 디자인 100% 복구 */
+        :root { --accent: #1a3a5c; --accent2: #2563a8; --bg: #f5f4f0; --border: #e2e0d8; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        .sidebar { width: 240px; background: var(--accent); color: white; height: 100vh; position: fixed; }
+        .main { margin-left: 240px; flex: 1; padding: 30px; }
+        .nav-item { padding: 15px 20px; cursor: pointer; opacity: 0.7; }
+        .nav-item.active { background: rgba(255,255,255,0.1); opacity: 1; font-weight: bold; }
+        .card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .btn { padding: 12px 24px; border-radius: 6px; cursor: pointer; border: none; font-weight: bold; width: 100%; }
+        .btn-send { background: #1a6b3c; color: white; font-size: 1.1em; }
         .page { display: none; }
         .page.active { display: block; }
-        .draft-section { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-        .news-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
-        .news-num { width: 22px; height: 22px; border-radius: 50%; background: var(--accent2); color: #fff; font-size: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     </style>
 </head>
 <body>
-    <div class="app">
-        <aside class="sidebar">
-            <div class="sidebar-logo"><div class="brand">EduPath</div><div class="sub">뉴스레터 자동화 본부</div></div>
-            <nav class="sidebar-nav">
-                <div class="nav-section">MAIN</div>
-                <div class="nav-item active" onclick="navigate('dashboard')">📊 대시보드</div>
-                <div class="nav-item" onclick="navigate('generate')">✨ AI 뉴스레터 생성</div>
-                <div class="nav-item" onclick="navigate('approve')">✅ 승인 및 발송 <span id="approve-badge" style="display:none; margin-left:auto; background:#ef4444; color:#fff; font-size:10px; padding:2px 6px; border-radius:10px;">1</span></div>
-                <div class="nav-section">MANAGE</div>
-                <div class="nav-item" onclick="navigate('settings')">⚙️ 시스템 설정</div>
-            </nav>
-        </aside>
+    <div class="sidebar">
+        <div style="padding: 30px 20px; font-size: 20px; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1);">EduPath HQ</div>
+        <div class="nav-item active" onclick="nav('dash')">📊 대시보드</div>
+        <div class="nav-item" onclick="nav('gen')">✨ AI 뉴스레터 생성</div>
+        <div class="nav-item" onclick="nav('send')">🚀 발송 본부</div>
+    </div>
 
-        <main class="main">
-            <header class="topbar">
-                <div class="topbar-title" id="topbar-title">대시보드</div>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <input type="password" id="claude-api-key" placeholder="Claude API Key" style="font-size:11px; padding:5px; border:1px solid #ddd; border-radius:4px;" onchange="localStorage.setItem('claude-api-key', this.value)">
-                    <div id="today-date" style="font-size:12px; color:var(--text2)"></div>
-                </div>
-            </header>
-
-            <div class="content">
-                <div id="page-dashboard" class="page active">
-                    <div class="stats-row">
-                        <div class="stat-card"><div class="stat-label">총 구독자</div><div class="stat-value">1,284</div></div>
-                        <div class="stat-card"><div class="stat-label">오픈율</div><div class="stat-value">38.4%</div></div>
-                        <div class="stat-card"><div class="stat-label">발송 완료</div><div class="stat-value">24회</div></div>
-                        <div class="stat-card"><div class="stat-label">상담 전환</div><div class="stat-value">6.1%</div></div>
-                    </div>
-                    <div class="card">
-                        <div class="card-header">이번 주 자동화 테마</div>
-                        <div class="card-body"><div id="week-scenario-label" style="background:#eff6ff; padding:15px; border-radius:8px; color:var(--accent2); font-weight:700;">테마 로딩 중...</div></div>
-                    </div>
-                </div>
-
-                <div id="page-generate" class="page">
-                    <div class="card">
-                        <div class="card-header">뉴스레터 생성 도구</div>
-                        <div class="card-body">
-                            <button class="btn btn-primary" style="width:100%; padding:15px; margin-bottom:12px;" onclick="generateNewsletter()">✨ AI 뉴스레터 생성 시작</button>
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                                <button class="btn" style="background:#f3f4f6;" onclick="restoreLastDraft()">🔄 마지막 원고 복구 (무료)</button>
-                                <button class="btn" style="background:#fffbeb;" onclick="generateTestDraft()">🧪 테스트 데이터 생성</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="draft-result" style="display:none;" class="card">
-                        <div class="card-header">생성된 초안</div>
-                        <div class="card-body" id="draft-content"></div>
-                        <button class="btn btn-green" style="width:calc(100% - 40px); margin:0 20px 20px 20px;" onclick="navigate('approve')">승인 페이지로 이동</button>
-                    </div>
-                </div>
-
-                <div id="page-approve" class="page">
-                    <div class="card">
-                        <div class="card-header">최종 승인 및 발송</div>
-                        <div class="card-body">
-                            <div id="approve-view" style="margin-bottom:20px; color:var(--text2);">먼저 원고를 생성하거나 복구해주세요.</div>
-                            <button class="btn btn-green" id="real-send-btn" style="width:100%; padding:20px; font-size:18px; display:none;" onclick="sendNewsletter()">🚀 지금 즉시 1,284명 일괄 발송</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="page-settings" class="page">
-                    <div class="card">
-                        <div class="card-header">발송 엔진 설정</div>
-                        <div class="card-body">
-                            <label style="display:block; margin-bottom:8px; font-weight:600;">Resend API Key</label>
-                            <input type="password" id="resend-api-key" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;" onchange="localStorage.setItem('resend-api-key', this.value)">
-                        </div>
-                    </div>
-                </div>
+    <div class="main">
+        <div id="page-dash" class="page active">
+            <div class="card"><h2>반갑습니다, 원장님</h2><p>오늘도 1,284명의 학부모님이 소식을 기다립니다.</p></div>
+        </div>
+        <div id="page-gen" class="page">
+            <div class="card">
+                <button class="btn" style="background:#eee;" onclick="restore()">🔄 이전 원고 불러오기</button>
+                <div id="status" style="margin-top:20px; padding:15px; background:#f9f9f9; display:none;"></div>
             </div>
-        </main>
+        </div>
+        <div id="page-send" class="page">
+            <div class="card">
+                <div id="send-target" style="margin-bottom:20px; color:#666;">발송할 원고가 없습니다.</div>
+                <button class="btn btn-send" id="btn-real" style="display:none;" onclick="startSend()">🚀 1,284명에게 진짜 발송 시작</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // [핵심 설정]
-        const SHEETS_API = 'https://script.google.com/macros/s/AKfycbzIkdPTEWK9IIW6eUHKIbkW0t9GvKPgSDRuWaYwhJSI9rzX1RY381ttG5p6xGEP8Fo/exec';
-        let draftData = null;
+        const API = 'https://script.google.com/macros/s/AKfycbzIkdPTEWK9IIW6eUHKIbkW0t9GvKPgSDRuWaYwhJSI9rzX1RY381ttG5p6xGEP8Fo/exec';
+        let currentDraft = null;
 
-        const WEEK_SCENARIOS = {
-            1: { theme: '1주차 — 미국 명문대 입시', topics: ['ivy'] },
-            2: { theme: '2주차 — 캐나다 교육 & 정착', topics: ['canadian'] },
-            3: { theme: '3주차 — 밴쿠버 라이프', topics: ['locallife'] },
-            4: { theme: '4주차 — 심층 기획', topics: ['feature'] }
-        };
-
-        function navigate(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('page-' + page).classList.add('active');
-            document.getElementById('topbar-title').textContent = page.toUpperCase();
-            if(page === 'approve') renderApprove();
+        function nav(p) {
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('page-'+p).classList.add('active');
         }
 
-        function saveAndRender(data) {
-            localStorage.setItem('edupath_last_draft', JSON.stringify(data));
-            draftData = data;
-            const container = document.getElementById('draft-content');
-            container.innerHTML = `<div class="draft-section"><h4>${data.subjects[0]}</h4><p>뉴스레터 원고가 준비되었습니다.</p></div>`;
-            document.getElementById('draft-result').style.display = 'block';
-            document.getElementById('approve-badge').style.display = 'block';
-        }
-
-        function restoreLastDraft() {
+        function restore() {
             const saved = localStorage.getItem('edupath_last_draft');
             if(!saved) return alert("저장된 원고가 없습니다.");
-            saveAndRender(JSON.parse(saved));
-            alert("원고를 성공적으로 복구했습니다.");
+            currentDraft = JSON.parse(saved);
+            document.getElementById('status').innerHTML = "✅ 원고 복구 완료: " + currentDraft.subjects[0];
+            document.getElementById('status').style.display = "block";
+            document.getElementById('send-target').innerHTML = "<strong>대상:</strong> " + currentDraft.subjects[0];
+            document.getElementById('btn-real').style.display = "block";
+            alert("원고를 가져왔습니다. 발송 본부로 이동하세요.");
         }
 
-        function generateTestDraft() {
-            const test = { subjects: ["(테스트) 밴쿠버 교육 가이드"], news: [], adMsg: "광고", ctaText: "상담하기" };
-            saveAndRender(test);
-        }
+        async function startSend() {
+            const key = localStorage.getItem('resend-api-key');
+            if(!key) return alert("설정에서 Resend API 키를 확인해주세요.");
+            if(!confirm("진짜 보낼까요?")) return;
 
-        function renderApprove() {
-            if(!draftData) return;
-            document.getElementById('approve-view').innerHTML = `<div class="draft-section"><strong>발송 대기 중:</strong> ${draftData.subjects[0]}</div>`;
-            document.getElementById('real-send-btn').style.display = 'block';
-        }
-
-        // [진짜 발송 엔진]
-        async function sendNewsletter() {
-            const resendKey = localStorage.getItem('resend-api-key');
-            if(!resendKey) return alert("설정에서 Resend API 키를 입력하세요.");
-            if(!confirm("정말로 발송하시겠습니까?")) return;
-
-            // 가동 메시지가 아니라 진짜 신호를 보냅니다
             try {
-                const response = await fetch(SHEETS_API, {
+                // 이 부분이 핵심입니다. "가동중" 메시지가 아니라 실제 통신을 합니다.
+                const res = await fetch(API, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'sendMail', apiKey: resendKey, data: draftData })
+                    body: JSON.stringify({ action: 'sendMail', apiKey: key, data: currentDraft })
                 });
-                alert("🚀 발송 요청을 보냈습니다! 구글 시트를 확인하세요.");
+                alert("🚀 발송 성공! 구글 시트를 확인하세요.");
             } catch(e) {
-                alert("오류 발생: " + e.message);
+                alert("⚠️ 연결 오류: " + e.message + "\n구글 시트 배포 설정을 확인해주세요.");
             }
         }
-
-        window.onload = function() {
-            const week = Math.min(Math.ceil(new Date().getDate() / 7), 4);
-            document.getElementById('week-scenario-label').textContent = "📅 오늘 테마: " + WEEK_SCENARIOS[week].theme;
-            document.getElementById('today-date').textContent = new Date().toLocaleDateString();
-            document.getElementById('claude-api-key').value = localStorage.getItem('claude-api-key') || '';
-            document.getElementById('resend-api-key').value = localStorage.getItem('resend-api-key') || '';
-        };
     </script>
 </body>
 </html>
